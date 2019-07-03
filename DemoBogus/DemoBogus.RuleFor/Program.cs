@@ -92,11 +92,15 @@ namespace DemoBogus.RuleFor
                 .RuleFor(u => u.CPF, (f, u) => u.GeraCPF())
                 .RuleFor(u => u.Login, f => fakeLoginFactory.Generate())
                 .RuleSet("nomeFeminino", f => f.RuleFor(u => u.Nome, fa => fa.Name.FirstName(Bogus.DataSets.Name.Gender.Female)))
+                .RuleSet("nome", f => f.Rules((fa, u) => {
+                    u.Nome = fa.Name.FirstName(Bogus.DataSets.Name.Gender.Female);
+                    u.Email = fa.Internet.Email(new Bogus.DataSets.Name().FirstName());
+                                                         }))
                 .FinishWith((f, u) => Console.WriteLine("Usuário criado: Id {0}", u.Id))
                 ;
 
             var user = new User();
-            fakeUserFactory.Populate(user);
+            fakeUserFactory.Populate(user, "nome");
 
             Console.WriteLine(user.AsJson());
             Console.ReadKey();
