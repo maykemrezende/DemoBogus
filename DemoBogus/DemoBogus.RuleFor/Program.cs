@@ -9,7 +9,7 @@ namespace DemoBogus.RuleFor
     {
         static void Main(string[] args)
         {
-            CriaUserFake();
+            CriaUserFakePopulate();
         }
 
 
@@ -71,7 +71,36 @@ namespace DemoBogus.RuleFor
             Console.ReadKey();
         }
 
+        private static void CriaUserFakePopulate()
+        {
+            var fakeLoginFactory = new Faker<Login>("pt_BR")
+                .RuleFor(u => u.Usuario, f => f.Internet.UserName("en"))
+                .RuleFor(u => u.UsuariosAntigos, f => CriaListaUsernameFake(5))
+                .RuleFor(u => u.SenhasAntigas, f => CriaListaSenhaFake(5))
+                ;
 
+            var fakeUserFactory = new Faker<User>("pt_BR")
+                .RuleFor(u => u.Id, f => f.Random.Number(1, 100))
+                .RuleFor(u => u.Nome, (f, u) => f.Name.FirstName())
+                .RuleFor(u => u.SobrenomeBogus, (f, u) => f.Name.LastName())
+                .RuleFor(u => u.NomeCompletoContexto, (f, u) => $"{u.Nome} {u.SobrenomeBogus}")
+                .RuleFor(u => u.NomeCompleto, (f, u) => f.Name.FullName())
+                .RuleFor(u => u.Email, (f, u) => f.Internet.Email())
+                .RuleFor(u => u.Sexo, (f, u) => f.PickRandom<SexoEnum>())
+                .RuleFor(u => u.ImagemPerfil, (f, u) => f.Internet.Avatar())
+                .RuleFor(u => u.Guid, f => Guid.NewGuid().ToString())
+                .RuleFor(u => u.CPF, (f, u) => u.GeraCPF())
+                .RuleFor(u => u.Login, f => fakeLoginFactory.Generate())
+                .RuleSet("nomeFeminino", f => f.RuleFor(u => u.Nome, fa => fa.Name.FirstName(Bogus.DataSets.Name.Gender.Female)))
+                .FinishWith((f, u) => Console.WriteLine("Usuário criado: Id {0}", u.Id))
+                ;
+
+            var user = new User();
+            fakeUserFactory.Populate(user);
+
+            Console.WriteLine(user.AsJson());
+            Console.ReadKey();
+        }
 
         private static List<string> CriaListaUsernameFake(int quantidadeLista)
         {
